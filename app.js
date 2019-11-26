@@ -14,12 +14,15 @@ const net = require('net');
 const socket = new net.Socket();
 
 let config = {
-  port: 3000,
+  port: 3001,
   host: 'localhost'
 };
 
 socket.on('connect', () => {
   console.log('App.js >> connected!');
+});
+socket.on('close', () => {
+  console.log('Closing app.js');
 });
 
 socket.connect(config, () => {
@@ -32,8 +35,9 @@ socket.connect(config, () => {
 
 setTimeout(function() {
   socket.destroy();
+  socket.end();
 }, 4000);
 
-socket.on('data', data => {
+socket.on('data', () => {
   console.log('App.js >> I just wrote a thing!');
 });

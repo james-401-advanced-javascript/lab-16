@@ -1,26 +1,25 @@
 'use strict';
 
-const emitter = require('./emitter');
 const fs = require('fs');
 const util = require('util');
 const faker = require('faker');
 const readFromFile = util.promisify(fs.readFile);
 const writeToFile = util.promisify(fs.writeFile);
-const logger = require('./logger');
-// write code just to get rid eslint errors from importing logger
-if (!fs) console.log(logger);
+const net = require('net');
+const socket = new net.Socket();
+
+let config = {
+  port: 3001,
+  host: 'localhost'
+};
+
+socket.on('connect', () => {
+  console.log('File-changer connected');
+});
+
+socket.connect(config, () => {});
 
 module.exports = exports = {};
-
-emitter.on('file-saved', file => {
-  console.log(file.text);
-  return file.text;
-});
-
-emitter.on('file-error', file => {
-  console.error(file.text);
-  return file.text;
-});
 
 /**
  *
@@ -41,16 +40,23 @@ exports.alterFile = async file => {
   try {
     await exports.loadFile(file);
     await exports.saveFile(file);
-    emitter.emit('file-saved', {
-      status: 1,
-      file: file,
-      text: 'saved'
-    });
+
+    socket.write(
+      JSON.stringify({
+        status: 1,
+        event: 'file-saved',
+        file: file,
+        text: 'saved'
+      })
+    );
   } catch (e) {
-    emitter.emit('file-error', {
-      status: 0,
-      file: file,
-      text: e
-    });
+    socket.write(
+      JSON.stringify({
+        status: 0,
+        event: 'file-error',
+        file: file,
+        text: e
+      })
+    );
   }
 };
